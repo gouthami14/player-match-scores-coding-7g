@@ -4,17 +4,17 @@ const path = require("path");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 
+const databasePath = path.join(__dirname, "cricketMatchDetails.db");
+
 const app = express();
 app.use(express.json());
 
-const dbPath = path.join(__dirname, "cricketMatchDetails.db");
-
-let db = null;
+let database = null;
 
 const initializeDBAndServer = async () => {
   try {
-    db = await open({
-      filename: dbPath,
+    database = await open({
+      filename: databasePath,
       driver: sqlite3.Database,
     });
 
@@ -68,14 +68,14 @@ app.get("/players/:playerId/", async (request, response) => {
      player_details
     WHERE
      player_id = ${playerId};`;
-  const player = await db.get(getPlayerQuery);
+  const player = await database.get(getPlayerQuery);
   response.send(convertPlayerDBObjectToResponseObject(player));
 });
 
 //Updates the details of a specific player based on the player ID
 app.put("/players/:playerId/", async (request, response) => {
   const { playerId } = request.params;
-  const { playerName } = request.params;
+  const { playerName } = request.body;
   const updatePlayerQuery = `
     UPDATE
      player_details
@@ -84,7 +84,7 @@ app.put("/players/:playerId/", async (request, response) => {
     WHERE
      player_id = ${playerId},;`;
 
-  await db.run(updatePlayerQuery);
+  await database.run(updatePlayerQuery);
   response.send("Player Details Updated");
 });
 
@@ -98,7 +98,7 @@ app.get("/matches/:matchId/", async (request, response) => {
      match_details
     WHERE
      match_id = ${matchId};`;
-  const matchDetails = await db.get(matchDetailsQuery);
+  const matchDetails = await database.get(matchDetailsQuery);
   response.send(convertMatchDetailsDBObjectToResponseObject(matchDetails));
 });
 
@@ -110,9 +110,10 @@ app.get("/players/:playerId/matches", async (request, response) => {
     *
     FROM
      player_match_score
+     NATURAL JOIN match_details
     WHERE
      player_id = ${playerId};`;
-  const playerMatches = await db.all(getPlayerMatchesQuery);
+  const playerMatches = await database.all(getPlayerMatchesQuery);
   response.send(
     playerMatches.map((eachMatch) =>
       convertMatchDetailsDBObjectToResponseObject(eachMatch)
@@ -131,7 +132,7 @@ app.get("/matches/:matchId/players", async (request, response) => {
      NATURAL JOIN player_details
     WHERE
      match_id = ${matchId};`;
-  const playersArray = await db.all(getMatchPlayersQuery);
+  const playersArray = await database.all(getMatchPlayersQuery);
   response.send(
     playersArray.map((eachPlayer) =>
       convertPlayerDBObjectToResponseObject(eachPlayer)
@@ -151,10 +152,10 @@ app.get("/players/:playerId/playerScores", async (request, response) => {
      SUM(sixes) AS totalSixes,
     FROM 
      player_match_score
+     NATURAL JOIN player_details
     WHERE
      player_id = ${playerId};`;
-  const getPlayerMatchDetails = await db.get(getMatchPlayersQuery);
-  response.send(getPlayerMatchDetails);
+  const playerMatchDetails = await database.get(getMatchPlayersQuery);
+  response.send(playerMatchDetails);
 });
-
 module.exports = app;
