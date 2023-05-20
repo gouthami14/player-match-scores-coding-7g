@@ -80,7 +80,7 @@ app.put("/players/:playerId/", async (request, response) => {
     UPDATE
      player_details
     SET
-     player_name = '${playerName}',
+     player_name = '${playerName}'
     WHERE
      player_id = ${playerId},;`;
 
