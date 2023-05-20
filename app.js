@@ -141,7 +141,7 @@ app.get("/matches/:matchId/players", async (request, response) => {
 });
 
 //7 Returns the statistics of the total score, fours, sixes of a specific player based on the player ID
-app.get("/players/:playerId/playerScores", async (request, response) => {
+app.get("/players/:playerId/playerScores/", async (request, response) => {
   const { playerId } = request.params;
   const getMatchPlayersQuery = `
     SELECT
